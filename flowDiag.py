@@ -114,7 +114,9 @@ class flowDiag(object):
             fd.close()
             
             image = self.text_image('textimg.txt')
-            image.save('text2img.png')
+            image.save('FlowDiagram.png')
+            six.print_("File created Successfully...")
+            six.print_("Path : {}".format(os.path.join(os.getcwd(),'FlowDiagram.png')))
             
             if os.path.isfile('textimg.txt'):
                 os.remove('textimg.txt')
@@ -142,7 +144,7 @@ class flowDiag(object):
         max_height = pt2px(font.getsize(test_string)[1])
         max_width = pt2px(font.getsize(max_width_line)[0])
         height = max_height * len(lines)  # perfect or a little oversized
-        width = int(round(max_width + 40))  # a little oversized
+        width = int(round(max_width + 60))  # a little oversized
         image = PIL.Image.new(grayscale, (width, height), color=PIXEL_OFF)
         draw = PIL.ImageDraw.Draw(image)
 
@@ -404,3 +406,44 @@ class flowDiag(object):
                 
             if len(v[2]) > self.maxLen:
                 self.maxLen = len(v[2])
+                
+def main():
+    if six.PY3:
+        file_path = input("Please Provide Flow File Path (i.e. .txt file) : ")
+    else:
+        file_path = raw_input("Please Provide Flow File Path (i.e. .txt file) : ")
+        
+    if os.path.splitext(file_path)[1].strip('.') != 'txt':
+        six.print_("Invalid File!!!")
+        sys.exit(1)
+    
+    if not os.path.isfile(file_path):
+        six.print_("File does not exist!!!!")
+        sys.exit(1)
+        
+    diagram = flowDiag()
+    
+    six.print_("What you want to do create ? ")
+    count = 0
+    run = True
+    while(run):
+        if six.PY3:
+            mode = input("1 : Create Flow on command line \n2 : Create Flow picture \n3 : Exit\n Your Choice : ")
+        else:
+            mode = raw_input("1 : Create Flow on command line \n2 : Create Flow picture \n3 : Exit\n Your Choice : ")
+        
+        if mode == '1' or mode == '2' or mode == '3':
+            run = False
+        else:    
+            six.print_("Invalid Input!!! \nPlease Choose from 1 , 2 , 3")
+    
+    if mode == '1':
+        diagram.drawCmdLine(file_path)
+    elif mode == '2':
+        diagram.drawPicture(file_path)
+    else:
+        six.print_("BYE BYE!!")
+        sys.exit(1)
+
+if '__main__' == __name__:
+    main()
