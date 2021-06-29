@@ -197,11 +197,13 @@ class flowDiag(object):
         max_col = int(len(nodes)-1)
         counter = 0
         goon = 0
+        go_on = 0
         row_padding = " "*3 + "|"
         draw = False
         gapf = True
         incall = False
-        for i in range(max_row):
+        last_incall = False
+        while(max_row):
             if not self.infile:
                 six.print_(row_padding,end="")
             else:
@@ -230,6 +232,11 @@ class flowDiag(object):
                 gap = 0
             
             orig_diff = diff
+            
+            if (start == lend) and (start == (len(self.node)-1)):
+                last_incall = True
+            else:
+                last_incall = False
             
             for j in range(max_col):
                 if not gapf:
@@ -281,35 +288,34 @@ class flowDiag(object):
                         
                         if goon == 0:
                             if not self.infile:
-                                six.print_("-"*2 + " "*(self.maxLen + word_len + 1),end="")
+                                six.print_("-"*3 + " "*(self.maxLen + word_len),end="")
                             else:
-                                self.fd.write("-"*2 + " "*(self.maxLen + word_len + 1))
+                                self.fd.write("-"*3 + " "*(self.maxLen + word_len))
                             goon += 1
                             gap = 3
                             incall = False
                         elif goon == 1:
                             if not self.infile:
-                                six.print_(" |" + " "*(self.maxLen + word_len + 1),end="")
+                                six.print_("  |" + " "*(self.maxLen + word_len),end="")
                             else:
-                                self.fd.write(" |" + " "*(self.maxLen + word_len + 1))
+                                self.fd.write("  |" + " "*(self.maxLen + word_len))
                             goon += 1
                             gap = 3
                             incall = False
                         else:
                             if not self.infile:
-                                six.print_("<" + "-" +" "*(self.maxLen + word_len + 1),end="")
+                                six.print_("<" + "--" +" "*(self.maxLen + word_len),end="")
                             else:
-                                self.fd.write("<" + "-" +" "*(self.maxLen + word_len + 1))
+                                self.fd.write("<" + "--" +" "*(self.maxLen + word_len))
                             goon = 0
                             incall = False
                             gap = 0
-                        
                     else:
                         if not self.infile:
                             six.print_(" "*(self.maxLen + word_len + 3),end="")
                         else:
                             self.fd.write(" "*(self.maxLen + word_len + 3))
-                        
+                                           
                     if not self.infile:
                         six.print_("|",end="")
                     else:
@@ -326,6 +332,38 @@ class flowDiag(object):
                                 six.print_(signal[2].strip() + " "*(self.maxLen + word_len + 3 - int(len(signal[2].strip()))) + "|",end="")
                             else:
                                 self.fd.write(signal[2].strip() + " "*(self.maxLen + word_len + 3 - int(len(signal[2].strip()))) + "|")
+                        elif last_incall:
+                            if j == start-1:
+                                if goon == 0:
+                                    if not self.infile:
+                                        six.print_(" "*(self.maxLen + word_len + 3) + "|" + signal[2].strip(),end="")
+                                    else:
+                                        self.fd.write(" "*(self.maxLen + word_len + 3) + "|" + signal[2].strip())
+                                    goon+=1
+                                elif goon == 1:
+                                    if not self.infile:
+                                        six.print_(" "*(self.maxLen + word_len + 3) + "|---",end="")
+                                    else:
+                                        self.fd.write(" "*(self.maxLen + word_len + 3) + "|---")
+                                    goon+=1
+                                elif goon == 2:
+                                    if not self.infile:
+                                        six.print_(" "*(self.maxLen + word_len + 3) + "|  |",end="")
+                                    else:
+                                        self.fd.write(" "*(self.maxLen + word_len + 3) + "|  |")
+                                    goon+=1
+                                else:
+                                    if not self.infile:
+                                        six.print_(" "*(self.maxLen + word_len + 3) + "|<--",end="")
+                                    else:
+                                        self.fd.write(" "*(self.maxLen + word_len + 3) + "|<--")
+                                    goon = 0
+                                    last_incall = False
+                            else:
+                                if not self.infile:
+                                    six.print_(" "*(self.maxLen + word_len + 3) + "|",end="")
+                                else:
+                                    self.fd.write(" "*(self.maxLen + word_len + 3) + "|")
                         else:
                             if not self.infile:
                                 six.print_(" "*(self.maxLen + word_len + 3) + "|",end="")
@@ -352,6 +390,8 @@ class flowDiag(object):
                 six.print_()
             else:
                 self.fd.write("\n")
+            if not goon:
+                max_row -= 1
             
     def getNodes(self):
         
