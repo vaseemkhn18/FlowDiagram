@@ -9,6 +9,7 @@ import PIL.Image
 import PIL.ImageFont
 import PIL.ImageOps
 import PIL.ImageDraw
+import re
 
 PIXEL_ON = 0  # PIL color to use for "on"
 PIXEL_OFF = 255  # PIL color to use for "off"
@@ -26,40 +27,56 @@ class flowDiag(object):
     
     def readFile(self):
         
-        six.print_("Reading File......")
+        six.print_("[FlowDiag] Reading File......")
         with open(self.fileName,'r') as fd:
             line_num = 0
             sig_cnt = 0
+            mstring = False
             for line in fd:
                 line_num += 1
                 if line.find('title') != -1:
                     self.title = line.strip('title').strip(' ')
                     pass
                 
-                if line.replace('\n',''):
-                    if line.find('->') != -1:
-                        res = line.split(':')[0].split('->')
-                        if len(res) == 2:
-                            if str(res[0]) not in self.node:
-                                self.node.append(str(res[0]))
+                if not mstring:
+                    if line.replace('\n',''):
+                        if line.find('->') != -1:
+                            res = line.split(':')[0].split('->')
+                            if len(res) == 2:
+                                if str(res[0]) not in self.node:
+                                    self.node.append(str(res[0]))
+                                
+                                if str(res[1]) not in self.node:
+                                    self.node.append(str(res[1]))
+                                
+                                tag = line.split(':',1)
+                                
+                                if "'" == tag[1].strip()[0] and "'" == tag[1].strip()[1] and "'" == tag[1].strip()[2]:
+                                    mstring = True
+                                
+                                tag = tag[1].strip(' ').lstrip('\'')
+                                
+                                if len(tag) > self.maxLen:
+                                    self.maxLen = len(tag)
+                                
+                                if not mstring:
+                                    lst = [str(res[0]), str(res[1]), str(tag)]
+                                    self.flow[sig_cnt] = lst
+                                    sig_cnt += 1
                             
-                            if str(res[1]) not in self.node:
-                                self.node.append(str(res[1]))
-                            
-                            tag = line.split(':',1)
-                            tag = tag[1].strip(' ')
-                            
-                            if len(tag) > self.maxLen:
-                                self.maxLen = len(tag)
-                            
-                            lst = [str(res[0]), str(res[1]), str(tag)]
-                            self.flow[sig_cnt] = lst
-                            sig_cnt += 1
-                        
-                        if len(res) != 2:
-                            six.print_("Invalid line !!!!")
-                            six.print_(str(self.fileName) + ".. " + str(line_num) + "....."+ str(line))
-                            sys.exit(1)
+                            if len(res) != 2:
+                                six.print_("Invalid line !!!!")
+                                six.print_(str(self.fileName) + ".. " + str(line_num) + "....."+ str(line))
+                                sys.exit(1)
+                else:
+                    tag += line.strip()
+                    if tag[-3] == "'" and tag[-2] == "'" and tag[-1] == "'":
+                        tag = tag.rstrip('\'')
+                        lst = [str(res[0]), str(res[1]), str(tag)]
+                        self.flow[sig_cnt] = lst
+                        sig_cnt += 1
+                        mstring = False
+                
             return 0
         six.print_("Unable to Open File : ",self.fileName)
         sys.exit(1)
@@ -78,7 +95,6 @@ class flowDiag(object):
         
         self.getNodes()
         self.infile = False
-        print(self.flow)
         self.printFlow()
             
     @dispatch(list)
@@ -102,7 +118,8 @@ class flowDiag(object):
     def setTitle(self,name):
         
         self.title = str(name)
-            
+    
+    @dispatch(str)
     def drawPicture(self,file_name):
         
         with open('textimg.txt','w') as fd:
@@ -115,13 +132,30 @@ class flowDiag(object):
             
             image = self.text_image('textimg.txt')
             image.save('FlowDiagram.png')
-            six.print_("File created Successfully...")
-            six.print_("Path : {}".format(os.path.join(os.getcwd(),'FlowDiagram.png')))
+            six.print_("[FlowDiag] File created Successfully...")
+            six.print_("[FlowDiag] Path : {}".format(os.path.join(os.getcwd(),'FlowDiagram.png')))
             
             if os.path.isfile('textimg.txt'):
                 os.remove('textimg.txt')
             
+    @dispatch()
+    def drawPicture(self):
+        
+        with open('textimg.txt','w') as fd:
+            self.getNodes()
+            self.infile = True
+            self.fd = fd
+            self.printFlow()
+            fd.close()
             
+            image = self.text_image('textimg.txt')
+            image.save('FlowDiagram.png')
+            six.print_("[FlowDiag] File created Successfully...")
+            six.print_("[FlowDiag] Path : {}".format(os.path.join(os.getcwd(),'FlowDiagram.png')))
+            
+            if os.path.isfile('textimg.txt'):
+                os.remove('textimg.txt')
+    
     def text_image(self,text_path):
         
         grayscale = 'L'
@@ -162,205 +196,262 @@ class flowDiag(object):
         return image
         
     def printFlow(self):
-        nodes = {}
-        for i,v in enumerate(self.node):
-            nodes[str(v)] = i
-        
-        dist = self.maxLen + 6
-        title = " "*dist + str(self.title)
-        node_line = ""
-        counter = 0
-        word_len = 0
-        gap = 0
-        for nod in self.node:
-            counter += 1
-            if word_len < len(nod):
-                word_len = len(nod)
-            if counter != len(self.node):
-                node_line += str(nod) + " "*dist
-            else:
-                node_line += str(nod)
-        if not self.infile:
-            six.print_()
-            six.print_()
-            six.print_(title)
-            six.print_()
-            six.print_()
-            six.print_(node_line)
-        else:
-            self.fd.write("\n")
-            self.fd.write("\n")
-            self.fd.write(title+"\n")
-            self.fd.write("\n")
-            self.fd.write("\n")
-            self.fd.write(node_line+"\n")
+        try:
+            nodes = {}
+            for i,v in enumerate(self.node):
+                nodes[str(v)] = i
             
-        max_row = int(len(self.flow)*3)+5
-        max_col = int(len(nodes)-1)
-        counter = 0
-        goon = 0
-        go_on = 0
-        row_padding = " "*3 + "|"
-        draw = False
-        gapf = True
-        incall = False
-        last_incall = False
-        while(max_row):
-            if not self.infile:
-                six.print_(row_padding,end="")
-            else:
-                self.fd.write(row_padding)
-            if not goon:
-                gap += 1
-                if not gapf and counter != int(len(self.flow)-1):
-                    counter += 1
-            signal = self.flow[counter]
-            if nodes[signal[0]] > nodes[signal[1]]:
-                head = "<"
-                start = nodes[signal[1]]
-                lend = nodes[signal[0]]
-                diff = nodes[signal[0]] - nodes[signal[1]]
-            else:
-                head = ">"
-                start = nodes[signal[0]]
-                lend = nodes[signal[1]]
-                diff = nodes[signal[1]] - nodes[signal[0]]
+            if self.maxLen > 44:
+                self.maxLen = 44
+            dist = self.maxLen + 6
+            title = " "*dist + str(self.title)
+            node_line = ""
+            counter = 0
+            word_len = 0
+            gap = 0
             
-            if gap < 3:
-                gapf = True
-                
-            if gap == 3:
-                gapf = False
-                gap = 0
-            
-            orig_diff = diff
-            
-            if (start == lend) and (start == (len(self.node)-1)):
-                last_incall = True
-            else:
-                last_incall = False
-            
-            for j in range(max_col):
-                if not gapf:
-                    if j == start:
-                        draw = True
-                        if start == lend:
-                            incall = True
-                    
-                    if j == lend:
-                        draw = False
-                    
-                    if draw:
-                        if diff == 1:
-                            if head == "<":
-                                if orig_diff == 1:
-                                    if not self.infile:
-                                        six.print_(head + "-"*(self.maxLen + word_len + 2),end="")
-                                    else:
-                                        self.fd.write(head + "-"*(self.maxLen + word_len + 2))
-                                else:
-                                    if not self.infile:
-                                        six.print_("-"*(self.maxLen + word_len + 3),end="")
-                                    else:
-                                        self.fd.write("-"*(self.maxLen + word_len + 3))
-                            if head == ">":
-                                if not self.infile:
-                                    six.print_("-"*(self.maxLen + word_len + 2)+ head,end="")
-                                else:
-                                    self.fd.write("-"*(self.maxLen + word_len + 2)+ head)
-                        else:
-                            if head == ">":
-                                if not self.infile:
-                                    six.print_("-"*(self.maxLen + word_len + 3),end="")
-                                else:
-                                    self.fd.write("-"*(self.maxLen + word_len + 3))
-                            else:
-                                if orig_diff == diff:
-                                    if not self.infile:
-                                        six.print_(head + "-"*(self.maxLen + word_len + 2),end="")
-                                    else:
-                                        self.fd.write(head + "-"*(self.maxLen + word_len + 2))
-                                else:
-                                    if not self.infile:
-                                        six.print_("-"*(self.maxLen + word_len + 3),end="")
-                                    else:
-                                        self.fd.write("-"*(self.maxLen + word_len + 3))
-                            diff -= 1
-                    elif incall:
-                        
-                        if goon == 0:
-                            if not self.infile:
-                                six.print_("-"*3 + " "*(self.maxLen + word_len),end="")
-                            else:
-                                self.fd.write("-"*3 + " "*(self.maxLen + word_len))
-                            goon += 1
-                            gap = 3
-                            incall = False
-                        elif goon == 1:
-                            if not self.infile:
-                                six.print_("  |" + " "*(self.maxLen + word_len),end="")
-                            else:
-                                self.fd.write("  |" + " "*(self.maxLen + word_len))
-                            goon += 1
-                            gap = 3
-                            incall = False
-                        else:
-                            if not self.infile:
-                                six.print_("<" + "--" +" "*(self.maxLen + word_len),end="")
-                            else:
-                                self.fd.write("<" + "--" +" "*(self.maxLen + word_len))
-                            goon = 0
-                            incall = False
-                            gap = 0
-                    else:
-                        if not self.infile:
-                            six.print_(" "*(self.maxLen + word_len + 3),end="")
-                        else:
-                            self.fd.write(" "*(self.maxLen + word_len + 3))
-                                           
-                    if not self.infile:
-                        six.print_("|",end="")
-                    else:
-                        self.fd.write("|")
-                    
-                    if j == len(nodes)-2:
-                        if lend == j+1:
-                            draw = False
-                    
+            linnum = 0
+            for nod in self.node:
+                counter += 1
+                if word_len < len(nod):
+                    word_len = len(nod)
+                if counter != len(self.node):
+                    node_line += str(nod) + " "*dist
                 else:
-                    if gap == 2:
+                    node_line += str(nod)
+            if not self.infile:
+                six.print_()
+                six.print_()
+                six.print_(title)
+                six.print_()
+                six.print_()
+                six.print_(node_line)
+            else:
+                self.fd.write("\n")
+                self.fd.write("\n")
+                self.fd.write(title+"\n")
+                self.fd.write("\n")
+                self.fd.write("\n")
+                self.fd.write(node_line+"\n")
+                
+            max_row = int(len(self.flow)*3)+5
+            max_col = int(len(nodes)-1)
+            counter = 0
+            goon = 0
+            go_on = 0
+            row_padding = " "*3 + "|"
+            draw = False
+            gapf = True
+            incall = False
+            last_incall = False
+            multi_line = False
+            maxlinesize = 44
+            note = []
+            while(max_row):
+                if not self.infile:
+                    six.print_(row_padding,end="")
+                else:
+                    self.fd.write(row_padding)
+                if not goon and not linnum:
+                    gap += 1
+                    if not gapf and counter != int(len(self.flow)-1):
+                        counter += 1
+                signal = self.flow[counter]
+                if nodes[signal[0]] > nodes[signal[1]]:
+                    head = "<"
+                    start = nodes[signal[1]]
+                    lend = nodes[signal[0]]
+                    diff = nodes[signal[0]] - nodes[signal[1]]
+                else:
+                    head = ">"
+                    start = nodes[signal[0]]
+                    lend = nodes[signal[1]]
+                    diff = nodes[signal[1]] - nodes[signal[0]]
+                
+                if gap < 3:
+                    gapf = True
+                    
+                if gap == 3:
+                    gapf = False
+                    gap = 0
+                
+                orig_diff = diff
+                
+                if (start == lend) and (start == (len(self.node)-1)):
+                    last_incall = True
+                else:
+                    last_incall = False
+                
+                if int(len(signal[2].strip())) > maxlinesize or  "\n" in signal[2].strip():
+                    multi_line = True
+                    
+                for j in range(max_col):
+                    if not gapf:
                         if j == start:
-                            if not self.infile:
-                                six.print_(signal[2].strip() + " "*(self.maxLen + word_len + 3 - int(len(signal[2].strip()))) + "|",end="")
+                            draw = True
+                            if start == lend:
+                                incall = True
+                        
+                        if j == lend:
+                            draw = False
+                        
+                        if draw:
+                            if diff == 1:
+                                if head == "<":
+                                    if orig_diff == 1:
+                                        if not self.infile:
+                                            six.print_(head + "-"*(self.maxLen + word_len + 2),end="")
+                                        else:
+                                            self.fd.write(head + "-"*(self.maxLen + word_len + 2))
+                                    else:
+                                        if not self.infile:
+                                            six.print_("-"*(self.maxLen + word_len + 3),end="")
+                                        else:
+                                            self.fd.write("-"*(self.maxLen + word_len + 3))
+                                if head == ">":
+                                    if not self.infile:
+                                        six.print_("-"*(self.maxLen + word_len + 2)+ head,end="")
+                                    else:
+                                        self.fd.write("-"*(self.maxLen + word_len + 2)+ head)
                             else:
-                                self.fd.write(signal[2].strip() + " "*(self.maxLen + word_len + 3 - int(len(signal[2].strip()))) + "|")
-                        elif last_incall:
-                            if j == start-1:
-                                if goon == 0:
+                                if head == ">":
                                     if not self.infile:
-                                        six.print_(" "*(self.maxLen + word_len + 3) + "|" + signal[2].strip(),end="")
+                                        six.print_("-"*(self.maxLen + word_len + 3),end="")
                                     else:
-                                        self.fd.write(" "*(self.maxLen + word_len + 3) + "|" + signal[2].strip())
-                                    goon+=1
-                                elif goon == 1:
-                                    if not self.infile:
-                                        six.print_(" "*(self.maxLen + word_len + 3) + "|---",end="")
+                                        self.fd.write("-"*(self.maxLen + word_len + 3))
+                                else:
+                                    if orig_diff == diff:
+                                        if not self.infile:
+                                            six.print_(head + "-"*(self.maxLen + word_len + 2),end="")
+                                        else:
+                                            self.fd.write(head + "-"*(self.maxLen + word_len + 2))
                                     else:
-                                        self.fd.write(" "*(self.maxLen + word_len + 3) + "|---")
-                                    goon+=1
-                                elif goon == 2:
-                                    if not self.infile:
-                                        six.print_(" "*(self.maxLen + word_len + 3) + "|  |",end="")
+                                        if not self.infile:
+                                            six.print_("-"*(self.maxLen + word_len + 3),end="")
+                                        else:
+                                            self.fd.write("-"*(self.maxLen + word_len + 3))
+                                diff -= 1
+                        elif incall:
+                            
+                            if goon == 0:
+                                if not self.infile:
+                                    six.print_("-"*3 + " "*(self.maxLen + word_len),end="")
+                                else:
+                                    self.fd.write("-"*3 + " "*(self.maxLen + word_len))
+                                goon += 1
+                                gap = 3
+                                incall = False
+                            elif goon == 1:
+                                if not self.infile:
+                                    six.print_("  |" + " "*(self.maxLen + word_len),end="")
+                                else:
+                                    self.fd.write("  |" + " "*(self.maxLen + word_len))
+                                goon += 1
+                                gap = 3
+                                incall = False
+                            else:
+                                if not self.infile:
+                                    six.print_("<" + "--" +" "*(self.maxLen + word_len),end="")
+                                else:
+                                    self.fd.write("<" + "--" +" "*(self.maxLen + word_len))
+                                goon = 0
+                                incall = False
+                                gap = 0
+                        else:
+                            if not self.infile:
+                                six.print_(" "*(self.maxLen + word_len + 3),end="")
+                            else:
+                                self.fd.write(" "*(self.maxLen + word_len + 3))
+                                               
+                        if not self.infile:
+                            six.print_("|",end="")
+                        else:
+                            self.fd.write("|")
+                        
+                        if j == len(nodes)-2:
+                            if lend == j+1:
+                                draw = False
+                        
+                    else:
+                        if gap == 2:
+                            if j == start:
+                                if not self.infile:
+                                    if multi_line:
+                                        newLst = signal[2].strip().split("\n")
+                                        note = self.detectOverflow(newLst,[])
+                                        note = self.makeFlatList(note,[])
+                                        six.print_(note[linnum] + " "*(self.maxLen + word_len + 3 - int(len(note[linnum]))) + "|",end="")
+                                        linnum+=1
+                                        if linnum == len(note):
+                                            linnum = 0
+                                            multi_line = False
                                     else:
-                                        self.fd.write(" "*(self.maxLen + word_len + 3) + "|  |")
-                                    goon+=1
+                                        six.print_(signal[2].strip() + " "*(self.maxLen + word_len + 3 - int(len(signal[2].strip()))) + "|",end="")
+                                else:
+                                    if multi_line:
+                                        newLst = signal[2].strip().split("\n")
+                                        note = self.detectOverflow(newLst,[])
+                                        note = self.makeFlatList(note,[])
+                                        self.fd.write(note[linnum] + " "*(self.maxLen + word_len + 3 - int(len(note[linnum]))) + "|")
+                                        linnum+=1
+                                        if linnum == len(note):
+                                            linnum = 0
+                                            multi_line = False
+                                    else:
+                                        self.fd.write(signal[2].strip() + " "*(self.maxLen + word_len + 3 - int(len(signal[2].strip()))) + "|")
+                            elif last_incall:
+                                if j == start-1:
+                                    if goon == 0:
+                                        if not self.infile:
+                                            if multi_line:
+                                                newLst = signal[2].strip().split("\n")
+                                                note = self.detectOverflow(newLst,[])
+                                                note = self.makeFlatList(note,[])
+                                                six.print_(" "*(self.maxLen + word_len + 3) + "|" + note[linnum],end="")
+                                                linnum+=1
+                                                if linnum == len(note):
+                                                    linnum = 0
+                                                    multi_line = False
+                                            else:
+                                                six.print_(" "*(self.maxLen + word_len + 3) + "|" + signal[2].strip(),end="")
+                                        else:
+                                            if multi_line:
+                                                newLst = signal[2].strip().split("\n")
+                                                note = self.detectOverflow(newLst,[])
+                                                note = self.makeFlatList(note,[])
+                                                self.fd.write(" "*(self.maxLen + word_len + 3) + "|" + note[linnum])
+                                                linnum+=1
+                                                if linnum == len(note):
+                                                    linnum = 0
+                                                    multi_line = False
+                                            else:
+                                                self.fd.write(" "*(self.maxLen + word_len + 3) + "|" + signal[2].strip())
+                                        if linnum == len(note) or not multi_line:
+                                            goon+=1
+                                    elif goon == 1:
+                                        if not self.infile:
+                                            six.print_(" "*(self.maxLen + word_len + 3) + "|---",end="")
+                                        else:
+                                            self.fd.write(" "*(self.maxLen + word_len + 3) + "|---")
+                                        goon+=1
+                                    elif goon == 2:
+                                        if not self.infile:
+                                            six.print_(" "*(self.maxLen + word_len + 3) + "|  |",end="")
+                                        else:
+                                            self.fd.write(" "*(self.maxLen + word_len + 3) + "|  |")
+                                        goon+=1
+                                    else:
+                                        if not self.infile:
+                                            six.print_(" "*(self.maxLen + word_len + 3) + "|<--",end="")
+                                        else:
+                                            self.fd.write(" "*(self.maxLen + word_len + 3) + "|<--")
+                                        goon = 0
+                                        last_incall = False
                                 else:
                                     if not self.infile:
-                                        six.print_(" "*(self.maxLen + word_len + 3) + "|<--",end="")
+                                        six.print_(" "*(self.maxLen + word_len + 3) + "|",end="")
                                     else:
-                                        self.fd.write(" "*(self.maxLen + word_len + 3) + "|<--")
-                                    goon = 0
-                                    last_incall = False
+                                        self.fd.write(" "*(self.maxLen + word_len + 3) + "|")
                             else:
                                 if not self.infile:
                                     six.print_(" "*(self.maxLen + word_len + 3) + "|",end="")
@@ -371,29 +462,26 @@ class flowDiag(object):
                                 six.print_(" "*(self.maxLen + word_len + 3) + "|",end="")
                             else:
                                 self.fd.write(" "*(self.maxLen + word_len + 3) + "|")
+                            
+                if counter == int(len(self.flow)-1) and gapf == False:
+                    if not self.infile:
+                        six.print_()
+                        six.print_(row_padding,end="")
+                        six.print_((" "*(self.maxLen + word_len + 3) + "|" )*max_col)
                     else:
-                        if not self.infile:
-                            six.print_(" "*(self.maxLen + word_len + 3) + "|",end="")
-                        else:
-                            self.fd.write(" "*(self.maxLen + word_len + 3) + "|")
-                        
-            if counter == int(len(self.flow)-1) and gapf == False:
+                        self.fd.write("\n")
+                        self.fd.write(row_padding)
+                        self.fd.write((" "*(self.maxLen + word_len + 3) + "|" )*max_col)
+                    break
+                
                 if not self.infile:
                     six.print_()
-                    six.print_(row_padding,end="")
-                    six.print_((" "*(self.maxLen + word_len + 3) + "|" )*max_col)
                 else:
                     self.fd.write("\n")
-                    self.fd.write(row_padding)
-                    self.fd.write((" "*(self.maxLen + word_len + 3) + "|" )*max_col)
-                break
-            
-            if not self.infile:
-                six.print_()
-            else:
-                self.fd.write("\n")
-            if not goon:
-                max_row -= 1
+                if not goon and not linnum:
+                    max_row -= 1
+        except KeyboardInterrupt:
+            six.print_("\n[FlowDiag] Interrupted by User!!!")
             
     def getNodes(self):
         
@@ -407,43 +495,70 @@ class flowDiag(object):
             if len(v[2]) > self.maxLen:
                 self.maxLen = len(v[2])
                 
+    def detectOverflow(self,lst,out):
+        maxlinesize = 44
+        for mystr in lst:
+            note = [mystr[x-maxlinesize:x] for x in range(maxlinesize,len(mystr)+maxlinesize,maxlinesize)]
+            out.append(note)
+        
+        return out
+    
+    def makeFlatList(self,lst,out):
+        for i in lst:
+            if type(i) == list:
+                self.makeFlatList(i,out)
+            else:
+                out.append(i)
+        
+        return out
+        
+                
 def main():
-    if six.PY3:
-        file_path = input("Please Provide Flow File Path (i.e. .txt file) : ")
-    else:
-        file_path = raw_input("Please Provide Flow File Path (i.e. .txt file) : ")
-        
-    if os.path.splitext(file_path)[1].strip('.') != 'txt':
-        six.print_("Invalid File!!!")
-        sys.exit(1)
-    
-    if not os.path.isfile(file_path):
-        six.print_("File does not exist!!!!")
-        sys.exit(1)
-        
-    diagram = flowDiag()
-    
-    six.print_("What you want to do create ? ")
-    count = 0
-    run = True
-    while(run):
-        if six.PY3:
-            mode = input("1 : Create Flow on command line \n2 : Create Flow picture \n3 : Exit\n Your Choice : ")
+    res = sys.argv
+    action = res[1]
+    try:
+        if action == "create":
+            if six.PY3:
+                file_path = input("[FlowDiag] Please Provide Flow File Path (i.e. .txt file) : ")
+            else:
+                file_path = raw_input("[FlowDiag] Please Provide Flow File Path (i.e. .txt file) : ")
+                
+            if os.path.splitext(file_path)[1].strip('.') != 'txt':
+                six.print_("[FlowDiag] Invalid File!!!")
+                sys.exit(1)
+            
+            if not os.path.isfile(file_path):
+                six.print_("[FlowDiag] File does not exist!!!!")
+                sys.exit(1)
+                
+            diagram = flowDiag()
+            
+            six.print_("[FlowDiag] What you want to do create ?")
+            count = 0
+            run = True
+            while(run):
+                if six.PY3:
+                    mode = input("[FlowDiag] 1 : Create Flow on command line \n[FlowDiag] 2 : Create Flow picture \n[FlowDiag] 3 : Exit\n[FlowDiag] Your Choice : ")
+                else:
+                    mode = raw_input("1 : Create Flow on command line \n2 : Create Flow picture \n3 : Exit\n Your Choice : ")
+                
+                if mode == '1' or mode == '2' or mode == '3':
+                    run = False
+                else:    
+                    six.print_("[FlowDiag] Invalid Input!!! \nPlease Choose from 1 , 2 , 3")
+            
+            if mode == '1':
+                diagram.drawCmdLine(file_path)
+            elif mode == '2':
+                diagram.drawPicture(file_path)
+            else:
+                six.print_("BYE BYE!!")
+                sys.exit(1)
         else:
-            mode = raw_input("1 : Create Flow on command line \n2 : Create Flow picture \n3 : Exit\n Your Choice : ")
-        
-        if mode == '1' or mode == '2' or mode == '3':
-            run = False
-        else:    
-            six.print_("Invalid Input!!! \nPlease Choose from 1 , 2 , 3")
+            six.print_("[FlowDiag] Invalid Action!!!")
+            sys.exit(1)
+    except KeyboardInterrupt:
+        six.print_("\n[FlowDiag] Interrupted by User!!!")
     
-    if mode == '1':
-        diagram.drawCmdLine(file_path)
-    elif mode == '2':
-        diagram.drawPicture(file_path)
-    else:
-        six.print_("BYE BYE!!")
-        sys.exit(1)
-
 if '__main__' == __name__:
     main()
