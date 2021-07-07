@@ -59,7 +59,7 @@ Participants do not have to be explicitly declared.
 
 To have a dotted arrow, you use ``-->``
 
-***NOTE*** Do not use ``-->`` or ``<-`` or ``<--`` instead of ``->``.
+**NOTE** Do not use ``-->`` or ``<-`` or ``<--`` instead of ``->``.
 This will impact flow diagram.
 
 To provide multiple line message please start and end message with ``'''``
@@ -69,7 +69,7 @@ For Example:
 Bob->Alice: '''Are you free?
 tomorrow'''
 ```
-***NOTE*** if a single line message will be sliced into multiple line as per the flow diagram size requirements.
+**NOTE** if a single line message will be sliced into multiple line as per the flow diagram size requirements.
 
 To execute module use below command:
 ```
@@ -148,7 +148,7 @@ Test Script Example:
 
 ```
 
-***Output:***
+**Output:**
 ```
 
 
@@ -215,7 +215,8 @@ To create image from the flow use ``drawPicture()`` method
 >>>
 ```
 
-Output:
+**Output**:
+
 ![Flowdiagram.png!](https://github.com/vaseemkhn18/FlowDiagram/blob/master/src/Flowdiagram.png "Flowdiagram")
 
 ## Methods
