@@ -1,0 +1,8 @@
+setup.py
+flowdiagram/__init__.py
+flowdiagram/__main__.py
+flowdiagram.egg-info/PKG-INFO
+flowdiagram.egg-info/SOURCES.txt
+flowdiagram.egg-info/dependency_links.txt
+flowdiagram.egg-info/requires.txt
+flowdiagram.egg-info/top_level.txt
