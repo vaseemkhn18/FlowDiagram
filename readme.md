@@ -212,7 +212,7 @@ To create image from the flow use ``drawPicture()`` method
 ```
 
 Output:
-[Flowdiagram.png]()
+[Flowdiagram.png](https://github.com/vaseemkhn18/FlowDiagram/blob/master/src/Flowdiagram.png)
 
 ## Methods
 
