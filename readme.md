@@ -18,15 +18,15 @@ FlowDiagram is a Python Library to create Sequence Diagram in Command Line or Im
 ```
 
 #### Manual Installation:
-This package requires:
+1. This package requires:
 -  multipledispatch==0.6.0
 -  six==1.16.0
 -  Pillow==8.2.0
 
-First install above packages.
-Download tar.gz from pypi and untar it.
-Go to untarred directory.
-Execute below command:
+2. First install above packages.
+3. Download tar.gz from pypi and untar it.
+4. Go to untarred directory.
+5. Execute below command:
 ```
     python setup.py install
 ```
