@@ -19,9 +19,9 @@ FlowDiagram is a Python Library to create Sequence Diagram in Command Line or Im
 
 #### Manual Installation:
 1. This package requires:
--  multipledispatch==0.6.0
--  six==1.16.0
--  Pillow==8.2.0
+    -  multipledispatch==0.6.0
+    -  six==1.16.0
+    -  Pillow==8.2.0
 
 2. First install above packages.
 3. Download tar.gz from pypi and untar it.
@@ -209,6 +209,19 @@ Test Script Example:
 To create image from the flow use ``drawPicture()`` method
 
 ```
+>>> from flowdiagram  import flowdiagram
+>>>
+>>> sqd = flowdiagram()
+>>> sqd.addTitle('Example Flow')
+>>> sqd.addFlow(['Bob','Alice','Hi! Alice'])
+>>> sqd.addFlow(['Alice','Bob','Hi! Bob'])
+>>> sqd.addFlow(['Bob','Alice','Are you free? \ntomorrow'])
+>>> sqd.addFlow(['Alice','Bob','I think so, why?'])
+>>> sqd.addFlow(['Bob','Alice','Want to see a movie?'])
+>>> sqd.addFlow(['Alice','Bob','Sure .'])
+>>> sqd.addFlow(['Bob','Alice','Great !'])
+>>> sqd.addFlow(['Alice','Bob','See You later'])
+>>> sqd.addFlow(['Bob','Alice','Bye .'])
 >>> sqd.drawPicture()
 [Flowdiagram] File created Successfully...
 [Flowdiagram] Path : C:\Users\myUser\Flowdiagram.png
@@ -220,4 +233,120 @@ To create image from the flow use ``drawPicture()`` method
 ![Flowdiagram.png!](https://github.com/vaseemkhn18/FlowDiagram/blob/master/src/Flowdiagram.png "Flowdiagram")
 
 ## Methods
+
+flowdiagram class consists of below methods:
+
+#### flowdiagram.setTitle(<span style="color:blue">str</span>)
+This method is used to set the title of the Sequence/Flow Diagram.
+For Example:
+```
+>>> from flowdiagram  import flowdiagram
+>>> sqd = flowdiagram()
+>>> sqd.setTitle('Script Flow Example')
+```
+
+#### flowdiagram.addFlow(<span style="color:blue">list</span>)
+This method is used to add flow of the Sequence/Flow Diagram.
+Format of the list is ``['source','destination','message']``
+**NOTE** if you want to add multiple lines message just add ``'\n'`` for next line. 
+For Example:
+```
+>>> from flowdiagram  import flowdiagram
+>>> sqd = flowdiagram()
+>>> sqd.setTitle('Script Flow Example')
+>>> sqd.addFlow(['Node 1','Node 2','First message \nmulti line'])
+```
+
+#### flowdiagram.drawCmdLine()
+This method is used to draw Sequence/Flow Diagram of added flow on command line.
+For Example:
+```
+>>> from flowdiagram  import flowdiagram
+>>> sqd = flowdiagram()
+>>> sqd.setTitle('Script Flow Example')
+>>> sqd.addFlow(['Node 1','Node 2','First message'])
+>>> sqd.addFlow(['Node 2','Node 1','Second message'])
+>>> sqd.drawCmdLine()
+
+
+
+                      Script Flow Example
+
+
+  Node 1                                                Node 2
+   |                                                     |
+   |First message                                        |
+   |---------------------------------------------------->|
+   |                                                     |
+   |Second message                                       |
+   |<----------------------------------------------------|
+   |                                                     |
+
+```
+
+### flowdiagram.drawCmdLine(<span style="color:blue">str</span>)
+This method is used to draw Sequence/Flow Diagram of added flow on command line via file.
+This method takes file path as an argument.
+File content [Example](#Generate Sequence Diagram via flow text file)
+For Example:
+```
+>>> from flowdiagram  import flowdiagram
+>>> sqd = flowdiagram()
+>>> myFile = 'C:\\Users\\myUser\\callflow.txt'
+>>> sqd.drawCmdLine(myFile)
+
+
+
+                      Script Flow Example
+
+
+  Node 1                                                Node 2
+   |                                                     |
+   |First message                                        |
+   |---------------------------------------------------->|
+   |                                                     |
+   |Second message                                       |
+   |<----------------------------------------------------|
+   |                                                     |
+
+```
+
+#### flowdiagram.drawPicture()
+This method is used to create IMAGE of Sequence/Flow Diagram of added flow.
+For Example:
+```
+>>> from flowdiagram  import flowdiagram
+>>> sqd = flowdiagram()
+>>> sqd.setTitle('Script Flow Example')
+>>> sqd.addFlow(['Node 1','Node 2','CER'])
+>>> sqd.addFlow(['Node 2','Node 1','CEA'])
+>>> sqd.addFlow(['Node 1','Node 2','CCR-I'])
+>>> sqd.addFlow(['Node 2','Node 1','CCA-I'])
+>>> sqd.addFlow(['Node 1','Node 2','CCR-T'])
+>>> sqd.addFlow(['Node 2','Node 1','CCA-T'])
+>>> sqd.addFlow(['Node 1','Node 2','DPR'])
+>>> sqd.addFlow(['Node 2','Node 1','DPA'])
+>>> sqd.drawPicture()
+[Flowdiagram] File created Successfully...
+[Flowdiagram] Path : C:\Users\myUser\Flowdiagram.png
+>>>
+```
+
+![Flowdiagram_2.png!](https://github.com/vaseemkhn18/FlowDiagram/blob/master/src/Flowdiagram_2.png "Flowdiagram")
+
+### flowdiagram.drawPicture(<span style="color:blue">str</span>)
+This method is used to create IMAGE of Sequence/Flow Diagram via file.
+This method takes file path as an argument.
+File content [Example](#Generate Sequence Diagram via flow text file)
+For Example:
+```
+>>> from flowdiagram  import flowdiagram
+>>> sqd = flowdiagram()
+>>> myFile = 'C:\\Users\\myUser\\callflow.txt'
+>>> sqd.drawPicture(myFile)
+[Flowdiagram] File created Successfully...
+[Flowdiagram] Path : C:\Users\myUser\Flowdiagram.png
+>>>
+```
+![Flowdiagram_2.png!](https://github.com/vaseemkhn18/FlowDiagram/blob/master/src/Flowdiagram_2.png "Flowdiagram")
 
