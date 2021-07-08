@@ -1,3 +1,4 @@
+README.md
 setup.py
 flowdiagram/__init__.py
 flowdiagram/__main__.py

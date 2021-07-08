@@ -197,6 +197,10 @@ class flowdiagram(object):
             for i,v in enumerate(self.node):
                 nodes[str(v)] = i
             
+            if  len(self.node)==0:
+                six.print_('[Flowdiagram] No Node Found')
+                sys.exit(0)
+            
             spacepernode = int(maxScreenSize/(len(self.node)))
             if self.maxLen > 44:
                 self.maxLen = 44

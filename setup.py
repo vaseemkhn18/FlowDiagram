@@ -17,8 +17,8 @@ setup(
     packages=["flowdiagram"],
     install_requires=[
         "multipledispatch==0.6.0",
-        "six==1.16.0",
-        "Pillow==8.2.0"
+        "six",
+        "Pillow"
         ],
     keywords='sequence diagram, UML diagram, flow diagram, comamnd line flow diagram',
     url='https://github.com/vaseemkhn18/FlowDiagram/',

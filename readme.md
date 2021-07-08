@@ -335,7 +335,7 @@ For Example:
 ![Flowdiagram_2.png!](https://github.com/vaseemkhn18/FlowDiagram/blob/master/src/Flowdiagram_2.png "Flowdiagram")
 
 ### flowdiagram.drawPicture(<span style="color:blue">str</span>)
-This method is used to create IMAGE of Sequence/Flow Diagram via file.
+This method is used to create IMAGE of Sequence/Flow Diagram of added flow on command line via file.
 This method takes file path as an argument.
 File content [Example](#Generate Sequence Diagram via flow text file)
 For Example:
